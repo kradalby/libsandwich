@@ -6,7 +6,7 @@ import sys
 
 from libsandwich import Sandwich
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     HOME_DIR = os.path.expanduser('~')
     SANDWICH_CONFIG = os.path.join(HOME_DIR, '.sandwichme.cfg')
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 'Could not find tower_cli config nor argument for setting {}'.
                 format(param))
 
-    valid_operations = ['list']
+    valid_operations = ['list', 'basket', 'add']
     if args.operation:
         if args.operation not in valid_operations:
             parser.print_help()
@@ -48,6 +48,17 @@ if __name__ == "__main__":
 
     sandwich = Sandwich(username, password)
 
-    if args.operation == "list":
+    if args.operation == 'list':
         print(sandwich.get_items())
         sys.exit(0)
+
+    if args.operation == 'basket':
+        print(sandwich.get_shop_cart())
+        sys.exit(0)
+
+    if args.operation == 'add':
+        item = sandwich.get_item(93)
+        sandwich.add_to_basket(item, 1)
+
+    if args.operation == 'random':
+        sandwiches = [] 
