@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+import os
+import argparse
+import configparser
+import sys
+
+from libsandwich import Sandwich
+
+if __name__ == "__main__":
+    HOME_DIR = os.path.expanduser('~')
+    SANDWICH_CONFIG = os.path.join(HOME_DIR, '.sandwichme.cfg')
+
+    username = ''
+    password = ''
+
+    if os.path.isfile(SANDWICH_CONFIG):
+        config = configparser.ConfigParser()
+        config.read(SANDWICH_CONFIG)
+        username = config['general']['username']
+        password = config['general']['password']
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-u', '--username', help='Qpay username')
+    parser.add_argument('-p', '--password', help='Qpay password')
+    parser.add_argument('-o', '--operation', help='Operation')
+    args = parser.parse_args()
+
+    # Override config with commandline parameters
+    if args.username:
+        username = args.username
+
+    if args.password:
+        password = args.password
+
+    # Check that necessary information is given
+
+    for param in ['username', 'password']:
+        if not eval(param):
+            sys.exit(
+                'Could not find tower_cli config nor argument for setting {}'.
+                format(param))
+
+    valid_operations = ['list']
+    if args.operation:
+        if args.operation not in valid_operations:
+            parser.print_help()
+            sys.exit(1)
+
+    sandwich = Sandwich(username, password)
+
+    if args.operation == "list":
+        print(sandwich.get_items())
+        sys.exit(0)

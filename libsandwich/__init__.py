@@ -5,6 +5,7 @@ from typing import Dict, List
 
 BASE_URL: str = 'https://www.quartonet.nl/ESAshop'
 
+
 class Item:
     def __init__(self, item: Dict):
         self.id: int = item['id']
@@ -39,7 +40,6 @@ class Sandwich:
         if response.status_code != 200:
             sys.exit("FATAL: Could not log in")
 
-
     def add_to_basket(self, item: Item, amount: int):
         url: str = BASE_URL + '/Bestelling/AddToCart'
         data = {
@@ -57,7 +57,6 @@ class Sandwich:
         url: str = BASE_URL + '/Artikelen/getShopCartJson'
         response = self.session.get(url)
         return response.json()
-
 
     def remove_item_from_shopping_cart(self, item: Item):
         url: str = BASE_URL + '/Bestelling/deleteFromCart'
@@ -94,11 +93,6 @@ class Sandwich:
         return [item['value'] for item in response.json()]
 
     def get_items(self) -> List[Item]:
-        items: List[Item] = [self.get_item(item) for item in self.get_all_item_ids()]
+        items: List[Item] = [self.get_item(item)
+                             for item in self.get_all_item_ids()]
         return [item for item in items if item is not None]
-
-
-
-
-
-

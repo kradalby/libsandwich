@@ -1,7 +1,8 @@
 __author__ = 'Kristoffer Dalby <kradalby@kradalby.no>'
 __version__ = '0.0.1'
 
-from setuptools import setup, find_packages
+from setuptools import setup
+import sys
 
 with open('requirements.txt') as requirements_file:
     install_requirements = requirements_file.read().splitlines()
@@ -22,8 +23,9 @@ setup(
     # python-selectors2 if installed but use a Bundled copy if it's not.
     install_requires=install_requirements,
     scripts=[
-        'bin/sandwichme',
+        'sandwichme',
     ],
+    packages=['onecall'],
     data_files=[],
     # Installing as zip files would break due to references to __file__
     zip_safe=False)
