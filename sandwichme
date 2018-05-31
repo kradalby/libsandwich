@@ -3,62 +3,126 @@ import os
 import argparse
 import configparser
 import sys
+import random
 
 from libsandwich import Sandwich
 
-if __name__ == '__main__':
-    HOME_DIR = os.path.expanduser('~')
-    SANDWICH_CONFIG = os.path.join(HOME_DIR, '.sandwichme.cfg')
 
-    username = ''
-    password = ''
+class Sandwichme(object):
 
-    if os.path.isfile(SANDWICH_CONFIG):
-        config = configparser.ConfigParser()
-        config.read(SANDWICH_CONFIG)
-        username = config['general']['username']
-        password = config['general']['password']
+    def __init__(self):
+        HOME_DIR = os.path.expanduser('~')
+        SANDWICH_CONFIG = os.path.join(HOME_DIR, '.sandwichme.cfg')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--username', help='Qpay username')
-    parser.add_argument('-p', '--password', help='Qpay password')
-    parser.add_argument('operation', help='Operation')
-    args = parser.parse_args()
+        self.username = ''
+        self.password = ''
 
-    # Override config with commandline parameters
-    if args.username:
-        username = args.username
+        if os.path.isfile(SANDWICH_CONFIG):
+            config = configparser.ConfigParser()
+            config.read(SANDWICH_CONFIG)
+            self.username = config['general']['username']
+            self.password = config['general']['password']
 
-    if args.password:
-        password = args.password
+        parser = argparse.ArgumentParser(
+               description='Order ESTEC sandwich efficiently',
+               usage='''
+sandwichme <command> [<args>]
 
-    # Check that necessary information is given
+The most commonly used sandwich commands are:
+   commit     Record changes to the repository
+   fetch      Download objects and refs from another repository
+''') 
+        parser.add_argument('-u', '--username', help='Qpay username')
+        parser.add_argument('-p', '--password', help='Qpay password')
+        parser.add_argument('command', help='Operation')
+        args = parser.parse_args(sys.argv[1:2])
 
-    for param in ['username', 'password']:
-        if not eval(param):
-            sys.exit(
-                'Could not find tower_cli config nor argument for setting {}'.
-                format(param))
+        # Override config with commandline parameters
+        if args.username:
+            self.username = args.username
 
-    valid_operations = ['list', 'basket', 'add']
-    if args.operation:
-        if args.operation not in valid_operations:
+        if args.password:
+            self.password = args.password
+
+        # Check that necessary information is given
+
+        for param in ['username', 'password']:
+            if not eval("self." + param):
+                sys.exit(
+                    'Could not find .sandwichme.cfg config nor argument for setting {}'.
+                    format(param))
+
+        self.sandwich = Sandwich(self.username, self.password)
+        
+        if not hasattr(self, args.command):
+            print('Unrecognized command')
             parser.print_help()
             sys.exit(1)
+        # use dispatch pattern to invoke method with same name
+        getattr(self, args.command)()
 
-    sandwich = Sandwich(username, password)
+    def add(self):
+        parser = argparse.ArgumentParser(
+                description='Add a sandwich to your basket',
+                usage='sandwichme <id> <amount>')
 
-    if args.operation == 'list':
-        print(sandwich.get_items())
-        sys.exit(0)
+        parser.add_argument('--price', type=float, help=argparse.SUPPRESS)
+        parser.add_argument('id', type=int)
+        parser.add_argument('amount', type=int)
 
-    if args.operation == 'basket':
-        print(sandwich.get_shop_cart())
-        sys.exit(0)
+        args = parser.parse_args(sys.argv[2:])
+        item = self.sandwich.get_item(args.id)
+        if args.price is not None:
+            item.price = args.price
 
-    if args.operation == 'add':
-        item = sandwich.get_item(93)
-        sandwich.add_to_basket(item, 1)
+        self.sandwich.add_to_basket(item, args.amount)
 
-    if args.operation == 'random':
-        sandwiches = []
+    def list(self):
+        print(self.sandwich.get_items())
+
+    def empty(self):
+        self.sandwich.empty_cart()
+
+    def basket(self):
+        print(self.sandwich.get_shop_cart())
+
+    def random(self):
+        parser = argparse.ArgumentParser(
+                description='Buys a random sandwich given a list of ids',
+                usage='sandwichme [ids]')
+
+        parser.add_argument('--price', type=float, help=argparse.SUPPRESS)
+        parser.add_argument('ids', type=int, nargs='*')
+
+        args = parser.parse_args(sys.argv[2:])
+
+        if args.ids is not None and len(args.ids) != 0:
+            sandwich_id = random.choice(args.ids)
+            item = self.sandwich.get_item(sandwich_id)
+
+            if args.price is not None:
+                item.price = args.price
+
+            self.sandwich.add_to_basket(item, 1)
+
+    def order(self):
+        self.sandwich.order("")
+
+
+if __name__ == '__main__':
+    Sandwichme()
+
+
+    # if args.operation[0] == 'list':
+    #     sys.exit(0)
+
+    # if args.operation == 'basket':
+    #     print(sandwich.get_shop_cart())
+    #     sys.exit(0)
+
+    # if args.operation == 'add':
+    #     item = sandwich.get_item(93)
+    #     sandwich.add_to_basket(item, 1)
+
+    # if args.operation == 'random':
+    #     sandwiches = []
